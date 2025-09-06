@@ -1,14 +1,25 @@
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import fetch from "node-fetch";
 
 dotenv.config();
 
-const client = new OpenAI({
+// ✅ OpenRouter client
+const openRouterClient = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY, // Store in .env
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-export async function convertHTMLToReact(htmlContent) {
+// ✅ Gemini API details
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+/**
+ * Convert HTML to React project using the specified model
+ * @param {string} htmlContent - The HTML code to convert
+ * @param {string} model - "openrouter" or "gemini"
+ */
+export async function convertHTMLToReact(htmlContent, model = "gemini") {
   const prompt = `
 You are an expert React developer. Convert the following HTML into a complete React project using **Vite** and **Tailwind CSS**.
 
@@ -62,13 +73,45 @@ FILE: src/index.css
 (add components if needed)
 \`\`\`
 Only output code in this format.
-  `;
+`;
 
-  const response = await client.chat.completions.create({
-    model: "deepseek/deepseek-r1:free", // For testing, later replace with GPT-4
-    messages: [{ role: "system", content: "You are an expert React developer." }, { role: "user", content: prompt }],
-  });
+  if (model === "openrouter") {
+    // ✅ Use OpenRouter
+    const response = await openRouterClient.chat.completions.create({
+      model: "deepseek/deepseek-r1:free", // Change if you want another free model
+      messages: [
+        { role: "system", content: "You are an expert React developer." },
+        { role: "user", content: prompt },
+      ],
+    });
 
-  return response.choices[0].message.content;
+    return response.choices[0].message.content;
+  }
+
+  if (model === "gemini") {
+    // ✅ Use Gemini Free API
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.candidates && data.candidates.length > 0) {
+      return data.candidates[0].content.parts[0].text;
+    } else {
+      throw new Error("Gemini API response invalid: " + JSON.stringify(data));
+    }
+  }
+
+  throw new Error(`Model ${model} not supported`);
 }
-

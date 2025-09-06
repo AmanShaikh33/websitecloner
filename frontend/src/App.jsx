@@ -1,122 +1,100 @@
 import { useState } from "react";
+import { cloneWebsite } from "../services/api"; // Use your helper
 
-export default function App() {
-  const [darkMode, setDarkMode] = useState(true);
+export default function CloneUI() {
+  const [url, setUrl] = useState("");
+  const [model, setModel] = useState("gemini");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleClone = async () => {
+    if (!url) {
+      alert("Please enter a website URL!");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await cloneWebsite(url, model);
+      setMessage(response.message);
+    } catch (error) {
+      console.error(error);
+      setMessage("Error cloning website!");
+    }
+
+    setLoading(false);
+  };
 
   return (
-    <div
-      className={`min-h-screen flex flex-col items-center justify-center px-4 transition-all duration-500 ${
-        darkMode ? "bg-black text-white" : "bg-white text-black"
-      }`}
-    >
-      {/* Theme Toggle Button */}
-      <div className="absolute top-5 right-5">
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          className={`px-4 py-2 rounded-full border transition-all duration-300 ${
-            darkMode
-              ? "bg-white text-black border-white hover:bg-gray-200"
-              : "bg-black text-white border-black hover:bg-gray-800"
-          }`}
-        >
-          {darkMode ? "Light Mode" : "Dark Mode"}
-        </button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-gray-900 to-black flex flex-col items-center justify-center text-white p-6">
+      <h1 className="text-4xl font-extrabold mb-6 animate-pulse">AI Website Cloner</h1>
 
-      {/* Header */}
-      <header className="text-center mb-10">
-        <h1 className="text-5xl font-bold mb-3">AI Website Cloner</h1>
-        <p
-          className={`text-lg ${
-            darkMode ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          Clone any website instantly and download as a ZIP file.
-        </p>
-      </header>
-
-      {/* Input Section */}
-      <div className="w-full max-w-md flex items-center gap-3 mb-8">
+      <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-lg">
         <input
           type="text"
           placeholder="Enter website URL"
-          className={`flex-1 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 ${
-            darkMode
-              ? "bg-gray-900 text-white placeholder-gray-500 focus:ring-gray-700"
-              : "bg-gray-100 text-black placeholder-gray-400 focus:ring-gray-300"
-          }`}
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white mb-4 focus:outline-none"
         />
+
+        {/* Model Selection */}
+        <div className="mb-4">
+          <p className="text-gray-300 mb-2">Choose AI Model:</p>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="model"
+                value="gemini"
+                checked={model === "gemini"}
+                onChange={() => setModel("gemini")}
+              />
+              Gemini
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="model"
+                value="openrouter"
+                checked={model === "openrouter"}
+                onChange={() => setModel("openrouter")}
+              />
+              OpenRouter (Deepseek)
+            </label>
+          </div>
+        </div>
+
+        {/* Clone Button */}
         <button
-          className={`px-6 py-3 font-semibold rounded-xl transition ${
-            darkMode
-              ? "bg-white text-black hover:bg-gray-300"
-              : "bg-black text-white hover:bg-gray-700"
-          }`}
+          onClick={handleClone}
+          className="w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold transition-all mb-4"
         >
-          Clone Now
+          {loading ? "Cloning..." : "Clone Website"}
         </button>
-      </div>
 
-      {/* Features */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl text-center">
-        <div
-          className={`p-6 rounded-xl transition ${
-            darkMode
-              ? "bg-gray-900 hover:bg-gray-800"
-              : "bg-gray-100 hover:bg-gray-200"
+        {/* Always Visible Download Button */}
+        <button
+          onClick={() => window.location.href = "/api/download"}
+          disabled={!message.includes("successfully")}
+          className={`w-full py-3 rounded-lg font-bold transition-all mb-4 ${
+            message.includes("successfully")
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-gray-600 cursor-not-allowed"
           }`}
         >
-          <h3 className="text-xl font-semibold mb-2">⚡ Fast</h3>
-          <p
-            className={`text-sm ${
-              darkMode ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Clone websites in seconds with blazing speed.
-          </p>
-        </div>
-        <div
-          className={`p-6 rounded-xl transition ${
-            darkMode
-              ? "bg-gray-900 hover:bg-gray-800"
-              : "bg-gray-100 hover:bg-gray-200"
-          }`}
-        >
-          <h3 className="text-xl font-semibold mb-2">🔒 Secure</h3>
-          <p
-            className={`text-sm ${
-              darkMode ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Your data is safe, and we never store URLs.
-          </p>
-        </div>
-        <div
-          className={`p-6 rounded-xl transition ${
-            darkMode
-              ? "bg-gray-900 hover:bg-gray-800"
-              : "bg-gray-100 hover:bg-gray-200"
-          }`}
-        >
-          <h3 className="text-xl font-semibold mb-2">✅ Easy</h3>
-          <p
-            className={`text-sm ${
-              darkMode ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Just enter the URL and download the ZIP file.
-          </p>
-        </div>
-      </div>
+          Download ZIP
+        </button>
 
-      {/* Footer */}
-      <footer
-        className={`mt-12 text-sm ${
-          darkMode ? "text-gray-500" : "text-gray-600"
-        }`}
-      >
-        © {new Date().getFullYear()} Website Cloner. All rights reserved.
-      </footer>
+        {/* Message Display */}
+        {message && (
+          <div className="mt-4 p-3 bg-gray-700 rounded-lg text-center">
+            {message}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

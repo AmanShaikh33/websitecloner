@@ -3,14 +3,15 @@ import path from "path";
 import archiver from "archiver";
 import { convertHTMLToReact } from "./aiService.js";
 
-export async function cloneWebsite(url) {
+export async function cloneWebsite(url, model = "gemini") {
   try {
     // Step 1: Fetch HTML
     const response = await fetch(url);
     const htmlContent = await response.text();
 
-    // Step 2: Convert to React project
-    const aiResponse = await convertHTMLToReact(htmlContent);
+    // Step 2: Convert HTML to React using selected model
+    console.log(`Converting HTML to React using model: ${model}`);
+    const aiResponse = await convertHTMLToReact(htmlContent, model);
 
     // Step 3: Parse AI response into files
     const lines = aiResponse.split("\n");
@@ -47,7 +48,10 @@ export async function cloneWebsite(url) {
     archive.directory(projectPath, false);
     await archive.finalize();
 
-    return { message: "React app generated and zipped successfully!", downloadUrl: "/api/download" };
+    return {
+      message: `React app generated and zipped successfully using ${model}!`,
+      downloadUrl: "/api/download",
+    };
   } catch (error) {
     console.error(error);
     return { error: "Failed to clone and zip website" };
