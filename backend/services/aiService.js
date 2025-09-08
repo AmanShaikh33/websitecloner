@@ -20,7 +20,7 @@ const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/
  * @param {string} model - "openrouter" or "gemini"
  */
 export async function convertHTMLToReact(htmlContent, model = "gemini") {
-  const prompt = `
+ const prompt = `
 You are an expert React developer. Convert the following HTML into a complete React project using **Vite** and **Tailwind CSS**.
 
 ### ✅ Requirements:
@@ -33,26 +33,19 @@ You are an expert React developer. Convert the following HTML into a complete Re
 - Include **postcss.config.js** for Tailwind
 - Include **index.html** for Vite
 - Include **src/main.jsx** for React root
-- Include **src/App.jsx** with the converted component
+- Include **src/App.jsx** with the main component
 - Include **src/index.css** with Tailwind directives
 - Use Tailwind for all styling (no external CSS files)
-- Create folder structure:
-  - root
-    - index.html
-    - vite.config.js
-    - tailwind.config.js
-    - postcss.config.js
-    - package.json
-    - src/
-      - main.jsx
-      - App.jsx
-      - index.css
-      - components/ (if needed)
+- Create **components folder** inside src for reusable components
+- **Automatically create React components** for logical sections (e.g., Header, Navigation, Hero, Footer, Cards, Forms)
+- Each component should be in its own file with proper export/import
+- Use meaningful names for components based on HTML sections
+- Ensure App.jsx imports and renders these components correctly
 
 ### ✅ HTML to convert:
 ${htmlContent}
 
-Output format:
+### ✅ Output format (use this exact format):
 \`\`\`
 FILE: package.json
 <code here>
@@ -70,10 +63,17 @@ FILE: src/App.jsx
 <code here>
 FILE: src/index.css
 <code here>
-(add components if needed)
+FILE: src/components/<ComponentName>.jsx
+<code here>
+(add additional components if needed)
 \`\`\`
-Only output code in this format.
+
+**Important:**
+- Only output code in this format.
+- Do not include explanations outside the FILE blocks.
+- Make sure all component imports in App.jsx are correct.
 `;
+
 
   if (model === "openrouter") {
     // ✅ Use OpenRouter

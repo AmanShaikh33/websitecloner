@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import archiver from "archiver";
 import { convertHTMLToReact } from "./aiService.js";
 
@@ -7,6 +8,7 @@ export async function cloneWebsite(url, model = "gemini") {
   try {
     // Step 1: Fetch HTML
     const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch HTML: ${response.status}`);
     const htmlContent = await response.text();
 
     // Step 2: Convert HTML to React using selected model
@@ -27,7 +29,7 @@ export async function cloneWebsite(url, model = "gemini") {
       }
     }
 
-    // Step 4: Create project folder
+    // Step 4: Create project folder temporarily
     const projectPath = path.join(process.cwd(), "cloned-react-app");
     if (!fs.existsSync(projectPath)) fs.mkdirSync(projectPath);
 
@@ -39,8 +41,12 @@ export async function cloneWebsite(url, model = "gemini") {
       fs.writeFileSync(fullPath, content.trim());
     }
 
-    // Step 6: Zip the folder
-    const zipPath = path.join(process.cwd(), "cloned-react-app.zip");
+    // Step 6: Zip the folder to Downloads
+    const downloadsPath = path.join(os.homedir(), "Downloads");
+    if (!fs.existsSync(downloadsPath)) fs.mkdirSync(downloadsPath); // ensure folder exists
+    const zipFileName = `cloned-react-app-${Date.now()}.zip`;
+    const zipPath = path.join(downloadsPath, zipFileName);
+
     const output = fs.createWriteStream(zipPath);
     const archive = archiver("zip", { zlib: { level: 9 } });
 
@@ -48,12 +54,17 @@ export async function cloneWebsite(url, model = "gemini") {
     archive.directory(projectPath, false);
     await archive.finalize();
 
+    console.log(`✅ React app zipped successfully at: ${zipPath}`);
+
+    // Optional: Clean up temporary project folder
+    fs.rmSync(projectPath, { recursive: true, force: true });
+
     return {
       message: `React app generated and zipped successfully using ${model}!`,
-      downloadUrl: "/api/download",
+      zipPath, // absolute path to the zip in Downloads
     };
   } catch (error) {
     console.error(error);
-    return { error: "Failed to clone and zip website" };
+    return { error: "Failed to clone and zip website", details: error.message };
   }
 }
