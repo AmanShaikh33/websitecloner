@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const cloneWebsite = async (url, model) => {
   try {
@@ -12,17 +12,16 @@ export const cloneWebsite = async (url, model) => {
   }
 };
 
-
 export const downloadClonedSite = async () => {
   try {
     const response = await axios.get(`${API_URL}/download`, {
-      responseType: "blob", // important for binary files
+      responseType: "blob",
     });
 
     // Create a temporary link and trigger download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement("a");
-    link.href = url;
+    link.href = blobUrl;
     link.setAttribute("download", "cloned-react-app.zip");
     document.body.appendChild(link);
     link.click();
@@ -32,4 +31,3 @@ export const downloadClonedSite = async () => {
     alert("Download failed. Check console for details.");
   }
 };
-
