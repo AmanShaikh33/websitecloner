@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import os from "os";
 import archiver from "archiver";
 import { convertHTMLToReact } from "./aiService.js";
 
@@ -29,8 +28,8 @@ export async function cloneWebsite(url, model = "gemini") {
       }
     }
 
-    // Step 4: Create project folder temporarily
-    const projectPath = path.join(process.cwd(), "cloned-react-app");
+    // Step 4: Create project folder temporarily in backend root
+    const projectPath = path.join(process.cwd(), "cloned-react-app-temp");
     if (!fs.existsSync(projectPath)) fs.mkdirSync(projectPath);
 
     // Step 5: Write files
@@ -41,11 +40,9 @@ export async function cloneWebsite(url, model = "gemini") {
       fs.writeFileSync(fullPath, content.trim());
     }
 
-    // Step 6: Zip the folder to Downloads
-    const downloadsPath = path.join(os.homedir(), "Downloads");
-    if (!fs.existsSync(downloadsPath)) fs.mkdirSync(downloadsPath); // ensure folder exists
+    // Step 6: Create zip with unique filename
     const zipFileName = `cloned-react-app-${Date.now()}.zip`;
-    const zipPath = path.join(downloadsPath, zipFileName);
+    const zipPath = path.join(process.cwd(), zipFileName);
 
     const output = fs.createWriteStream(zipPath);
     const archive = archiver("zip", { zlib: { level: 9 } });
@@ -56,12 +53,12 @@ export async function cloneWebsite(url, model = "gemini") {
 
     console.log(`✅ React app zipped successfully at: ${zipPath}`);
 
-    // Optional: Clean up temporary project folder
+    // Step 7: Clean up temporary project folder
     fs.rmSync(projectPath, { recursive: true, force: true });
 
     return {
       message: `React app generated and zipped successfully using ${model}!`,
-      zipPath, // absolute path to the zip in Downloads
+      filename: zipFileName, // return only filename, not full path
     };
   } catch (error) {
     console.error(error);

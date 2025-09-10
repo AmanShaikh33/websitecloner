@@ -1,19 +1,35 @@
 import express from "express";
-import { cloneWebsite } from "../services/cloneService.js";
+import fs from "fs";
 import path from "path";
+import { cloneWebsite } from "../services/cloneService.js";
 
 const router = express.Router();
 
+// Clone route
 router.post("/clone", async (req, res) => {
-  const { url, model } = req.body; // model can be "gemini" or "openrouter"
+  const { url, model } = req.body;
   const result = await cloneWebsite(url, model || "gemini");
-  res.json(result);
+
+  if (result.error) {
+    return res.status(500).json(result);
+  }
+
+  res.json({
+    message: result.message,
+    filename: result.filename,
+  });
 });
 
-// Download route
-router.get("/download", (req, res) => {
-  const zipPath = path.join(process.cwd(), "cloned-react-app.zip");
-  res.download(zipPath, "cloned-react-app.zip");
+// Download route (with filename)
+router.get("/download/:filename", (req, res) => {
+  const filename = req.params.filename;
+  const zipPath = path.join(process.cwd(), filename);
+
+  if (!fs.existsSync(zipPath)) {
+    return res.status(404).json({ error: "File not found" });
+  }
+
+  res.download(zipPath, filename);
 });
 
 export default router;
