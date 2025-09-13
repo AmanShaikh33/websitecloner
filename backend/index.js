@@ -3,7 +3,13 @@ import cors from "cors";
 import cloneRoute from "./routes/cloneRoute.js";
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: "https://websitecloner.vercel.app", // allow your frontend
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
+
 app.use(express.json());
 
 app.use("/api", cloneRoute);
