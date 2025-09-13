@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { cloneWebsite } from "../services/api"; // Your helper function
+import { cloneWebsite, downloadClonedSite } from "../services/api"; // ✅ import both
 
 export default function CloneUI() {
   const [url, setUrl] = useState("");
   const [model, setModel] = useState("gemini");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [darkMode, setDarkMode] = useState(false); // Theme state
+  const [filename, setFilename] = useState(""); // ✅ store filename
+  const [darkMode, setDarkMode] = useState(false);
 
   const handleClone = async () => {
     if (!url) {
@@ -16,16 +17,28 @@ export default function CloneUI() {
 
     setLoading(true);
     setMessage("");
+    setFilename(""); // reset old filename
 
     try {
       const response = await cloneWebsite(url, model);
       setMessage(response.message);
+      if (response.filename) {
+        setFilename(response.filename); // ✅ capture filename
+      }
     } catch (error) {
       console.error(error);
       setMessage("Error cloning website!");
     }
 
     setLoading(false);
+  };
+
+  const handleDownload = () => {
+    if (!filename) {
+      alert("No file available to download!");
+      return;
+    }
+    downloadClonedSite(filename); // ✅ use helper
   };
 
   return (
@@ -37,7 +50,6 @@ export default function CloneUI() {
       {/* Header */}
       <div className="flex items-center justify-between w-full max-w-lg mb-6">
         <h1 className="text-4xl font-extrabold tracking-wide">⚡ WebClone AI</h1>
-        {/* Dark/Light Toggle Button */}
         <button
           onClick={() => setDarkMode(!darkMode)}
           className={`px-4 py-2 rounded-lg font-medium border transition-all ${
@@ -57,9 +69,7 @@ export default function CloneUI() {
       {/* Main Card */}
       <div
         className={`p-8 rounded-2xl shadow-2xl w-full max-w-lg border transition-colors ${
-          darkMode
-            ? "bg-gray-900 border-gray-700"
-            : "bg-white border-gray-300"
+          darkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-300"
         }`}
       >
         <input
@@ -117,10 +127,10 @@ export default function CloneUI() {
 
         {/* Download Button */}
         <button
-          onClick={() => (window.location.href = "/api/download")}
-          disabled={!message.includes("successfully")}
+          onClick={handleDownload}
+          disabled={!filename}
           className={`w-full py-3 rounded-lg font-bold transition-all mb-4 ${
-            message.includes("successfully")
+            filename
               ? "bg-green-500 hover:bg-green-600 text-white"
               : "bg-gray-300 text-gray-600 cursor-not-allowed"
           }`}

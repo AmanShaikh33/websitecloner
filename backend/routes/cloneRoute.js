@@ -7,18 +7,29 @@ const router = express.Router();
 
 // Clone route
 router.post("/clone", async (req, res) => {
-  const { url, model } = req.body;
-  const result = await cloneWebsite(url, model || "gemini");
+  try {
+    const { url, model } = req.body;
 
-  if (result.error) {
-    return res.status(500).json(result);
+    if (!url) {
+      return res.status(400).json({ error: "URL is required" });
+    }
+
+    const result = await cloneWebsite(url, model || "gemini");
+
+    if (result.error) {
+      return res.status(500).json(result);
+    }
+
+    res.json({
+      message: result.message,
+      filename: result.filename,
+    });
+  } catch (err) {
+    console.error("Clone error:", err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
   }
-
-  res.json({
-    message: result.message,
-    filename: result.filename,
-  });
 });
+
 
 // Download route (with filename)
 router.get("/download/:filename", (req, res) => {
